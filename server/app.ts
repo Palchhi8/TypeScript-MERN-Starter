@@ -8,6 +8,7 @@ import mongoose from "mongoose";
 import passport from "passport";
 import bluebird from "bluebird";
 import errorHandler from "errorhandler";
+import path from "path";
 import { MONGODB_URI, SESSION_SECRET, SERVER_PORT, ORIGIN_URI } from "./util/secrets";
 import { Response, Request, NextFunction } from "express";
 import oauth2 from "./routes/oauth2";
@@ -22,6 +23,7 @@ import avatar from "./routes/avatar";
 import notification from "./routes/notification";
 import thread from "./routes/thread";
 import version from "./routes/version";
+import upload from "./routes/upload";
 import { CORS_WHITELIST } from "../client/core/src/models/HostUrl";
 import { notFoundHandler, globalErrorHandler } from "./middleware/errorHandler";
 
@@ -86,6 +88,9 @@ if (process.env.NODE_ENV === "development") {
     app.use(errorHandler());
 }
 
+// Serve uploaded files
+app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+
 // Server rendering configuration
 if (process.env.NODE_ENV === "production") {
     app.use(
@@ -128,6 +133,7 @@ app.use("/api/comment", comment); // Comment related routes
 app.use("/api/notification", notification); // Notification related routes
 app.use("/api/image", image);
 app.use("/api/thread", thread);
+app.use("/api/upload", upload); // File upload routes
 // Add more routes like "/api/***" here
 
 // Error handling middleware
