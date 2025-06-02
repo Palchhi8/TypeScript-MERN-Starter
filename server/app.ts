@@ -23,18 +23,14 @@ import notification from "./routes/notification";
 import thread from "./routes/thread";
 import version from "./routes/version";
 import { CORS_WHITELIST } from "../client/core/src/models/HostUrl";
+import { notFoundHandler, globalErrorHandler } from "./middleware/errorHandler";
 
 // Connect to MongoDB
 const MongoStore = mongo(session);
 const mongoUrl: string = MONGODB_URI as string;
 (<any>mongoose).Promise = bluebird;
-mongoose.set("useNewUrlParser", true);
-mongoose.set("useFindAndModify", false);
-mongoose.set("useCreateIndex", true);
-mongoose.connect(mongoUrl, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true
-}).then(
+// Removed deprecated options - these are now default in mongoose 6+
+mongoose.connect(mongoUrl).then(
     () => {
         console.log("  MongoDB is connected successfully.");
     },
@@ -84,6 +80,8 @@ app.use((req: Request, res: Response, next: NextFunction) => {
     res.locals.user = req.user;
     next();
 });
+// In development, we'll use the built-in errorHandler for more verbose output
+// but still use our custom error handler for API responses
 if (process.env.NODE_ENV === "development") {
     app.use(errorHandler());
 }
@@ -131,5 +129,10 @@ app.use("/api/notification", notification); // Notification related routes
 app.use("/api/image", image);
 app.use("/api/thread", thread);
 // Add more routes like "/api/***" here
+
+// Error handling middleware
+// This should be after all routes are defined
+app.use(notFoundHandler); // Handle 404 errors
+app.use(globalErrorHandler); // Global error handler
 
 export default app;
